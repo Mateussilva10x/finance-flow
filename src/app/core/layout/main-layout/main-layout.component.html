@@ -1,0 +1,39 @@
+<div class="flex h-screen bg-gray-50 text-gray-900 font-sans">
+  <aside class="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col">
+    <div class="h-16 flex items-center px-6 border-b border-gray-100">
+      <span class="text-xl font-bold text-green-600 tracking-tight">Finance Flow</span>
+    </div>
+
+    <nav class="flex-1 p-4 space-y-1">
+      @for (item of menuItems; track item.label) {
+      <a
+        [routerLink]="item.route"
+        routerLinkActive="bg-green-50 text-green-700 font-medium"
+        class="flex items-center gap-3 px-4 py-3 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
+      >
+        <span class="text-lg">{{ item.icon }}</span>
+        <span>{{ item.label }}</span>
+      </a>
+      }
+    </nav>
+
+    <div class="p-4 border-t border-gray-100">
+      <button
+        class="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+      >
+        <span>🚪</span>
+        <span>Sair</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="flex-1 flex flex-col overflow-hidden">
+    <header class="h-16 bg-white border-b border-gray-200 flex items-center px-6 md:hidden">
+      <span class="font-bold text-green-600">Finance Flow</span>
+    </header>
+
+    <div class="flex-1 overflow-auto p-6 md:p-8">
+      <router-outlet />
+    </div>
+  </main>
+</div>
