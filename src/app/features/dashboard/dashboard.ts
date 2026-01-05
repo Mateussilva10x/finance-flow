@@ -1,20 +1,27 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FinancialService } from '../../core/services/financial.service';
+import { TransactionModalComponent } from '../transactions/components/transaction-modal/transaction-modal.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, DatePipe],
+  imports: [CommonModule, CurrencyPipe, DatePipe, TransactionModalComponent],
   template: `
-    <div class="space-y-6">
+    <div class="space-y-6 relative">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h1 class="text-2xl font-bold text-gray-800">Visão Geral</h1>
-        <div class="text-sm bg-blue-50 text-blue-700 px-4 py-2 rounded-lg border border-blue-100">
-          💰 Potencial de Investimento:
-          <span class="font-bold">{{
-            financialService.investmentPotential() | currency : 'BRL'
-          }}</span>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">Visão Geral</h1>
+          <p class="text-gray-500 text-sm">Acompanhe sua saúde financeira</p>
+        </div>
+
+        <div class="flex gap-3">
+          <button
+            (click)="isModalOpen.set(true)"
+            class="bg-gray-900 text-white px-5 py-2.5 rounded-lg hover:bg-gray-800 transition-all flex items-center gap-2 shadow-lg shadow-gray-200"
+          >
+            <span>+</span> Nova Transação
+          </button>
         </div>
       </div>
 
@@ -93,11 +100,11 @@ import { FinancialService } from '../../core/services/financial.service';
         <div class="divide-y divide-gray-100">
           @for (item of financialService.getTransactions()(); track item.id) {
           <div
-            class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+            class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors group"
           >
             <div class="flex items-center gap-4">
               <div
-                class="w-10 h-10 rounded-full flex items-center justify-center"
+                class="w-10 h-10 rounded-full flex items-center justify-center text-lg"
                 [class.bg-green-100]="item.type === 'income'"
                 [class.text-green-600]="item.type === 'income'"
                 [class.bg-red-100]="item.type === 'expense'"
@@ -108,26 +115,49 @@ import { FinancialService } from '../../core/services/financial.service';
               <div>
                 <p class="font-medium text-gray-900">{{ item.title }}</p>
                 <p class="text-xs text-gray-500">
-                  {{ item.category }} • {{ item.date | date : 'shortDate' }}
+                  {{ item.category }} • {{ item.date | date : 'dd/MM/yyyy' }}
                 </p>
               </div>
             </div>
-            <span
-              class="font-bold"
-              [class.text-green-600]="item.type === 'income'"
-              [class.text-red-600]="item.type === 'expense'"
-            >
-              {{ item.type === 'income' ? '+' : '-' }} {{ item.amount | currency : 'BRL' }}
-            </span>
+
+            <div class="flex items-center gap-4">
+              <span
+                class="font-bold whitespace-nowrap"
+                [class.text-green-600]="item.type === 'income'"
+                [class.text-red-600]="item.type === 'expense'"
+              >
+                {{ item.type === 'income' ? '+' : '-' }} {{ item.amount | currency : 'BRL' }}
+              </span>
+
+              <button
+                (click)="deleteTransaction(item.id)"
+                class="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all opacity-0 group-hover:opacity-100"
+                title="Excluir"
+              >
+                🗑️
+              </button>
+            </div>
           </div>
+          } @if (financialService.getTransactions()().length === 0) {
+          <div class="p-8 text-center text-gray-400">Nenhuma transação cadastrada ainda.</div>
           }
         </div>
       </div>
+      @if (isModalOpen()) {
+      <app-transaction-modal (closeModal)="isModalOpen.set(false)" />
+      }
     </div>
   `,
 })
 export class DashboardComponent {
   financialService = inject(FinancialService);
-
   Math = Math;
+
+  isModalOpen = signal(false);
+
+  deleteTransaction(id: string) {
+    if (confirm('Tem certeza que deseja excluir esta transação?')) {
+      this.financialService.removeTransaction(id);
+    }
+  }
 }

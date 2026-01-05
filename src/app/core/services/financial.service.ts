@@ -1,38 +1,55 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, signal, effect, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Transaction } from '../models/transaction.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class FinancialService {
-  private transactions = signal<Transaction[]>([
-    {
-      id: '1',
-      title: 'Salário',
-      amount: 5000,
-      type: 'income',
-      category: 'Salário',
-      date: new Date(),
-    },
-    {
-      id: '2',
-      title: 'Aluguel',
-      amount: 500,
-      type: 'expense',
-      category: 'Moradia',
-      date: new Date(),
-    },
-    {
-      id: '3',
-      title: 'Supermercado',
-      amount: 800,
-      type: 'expense',
-      category: 'Alimentação',
-      date: new Date(),
-    },
-  ]);
+  private platformId = inject(PLATFORM_ID);
 
+  private transactions = signal<Transaction[]>([]);
   private monthlyLimitSignal = signal<number>(3000);
+
+  constructor() {
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadFromStorage();
+
+      effect(() => {
+        const state = {
+          transactions: this.transactions(),
+          limit: this.monthlyLimitSignal(),
+        };
+        localStorage.setItem('finance-flow-data', JSON.stringify(state));
+      });
+    }
+  }
+
+  private loadFromStorage() {
+    const data = localStorage.getItem('finance-flow-data');
+    if (data) {
+      const parsed = JSON.parse(data);
+
+      const transactionsWithDates = parsed.transactions.map((t: any) => ({
+        ...t,
+        date: new Date(t.date),
+      }));
+
+      this.transactions.set(transactionsWithDates);
+      this.monthlyLimitSignal.set(parsed.limit || 3000);
+    } else {
+      this.transactions.set([
+        {
+          id: '1',
+          title: 'Salário Inicial',
+          amount: 5000,
+          type: 'income',
+          category: 'Salário',
+          date: new Date(),
+        },
+      ]);
+    }
+  }
 
   public totalIncome = computed(() =>
     this.transactions()
@@ -61,12 +78,8 @@ export class FinancialService {
   });
 
   addTransaction(transaction: Omit<Transaction, 'id'>) {
-    const newTransaction: Transaction = {
-      ...transaction,
-      id: crypto.randomUUID(),
-    };
-
-    this.transactions.update((current) => [...current, newTransaction]);
+    const newTransaction: Transaction = { ...transaction, id: crypto.randomUUID() };
+    this.transactions.update((current) => [newTransaction, ...current]);
   }
 
   removeTransaction(id: string) {
@@ -80,7 +93,6 @@ export class FinancialService {
   getTransactions() {
     return this.transactions.asReadonly();
   }
-
   getMonthlyLimit() {
     return this.monthlyLimitSignal.asReadonly();
   }
