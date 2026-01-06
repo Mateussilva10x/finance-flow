@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ThemeService } from '../../services/theme.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -16,7 +17,7 @@ export class MainLayoutComponent implements OnInit {
     { label: 'Configurações', route: '/settings', icon: '⚙️' },
   ];
 
-  constructor() {}
+  constructor(public themeService: ThemeService) {}
 
   ngOnInit() {}
 }

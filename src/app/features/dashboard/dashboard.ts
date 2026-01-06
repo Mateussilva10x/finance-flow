@@ -3,6 +3,7 @@ import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FinancialService } from '../../core/services/financial.service';
 import { TransactionModalComponent } from '../transactions/components/transaction-modal/transaction-modal.component';
 import { ExpenseChartComponent } from '../../shared/components/expense-chart/expense-chart';
+import { ConfirmDialogService } from '../../shared/services/confirm-dialog.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -156,13 +157,19 @@ import { ExpenseChartComponent } from '../../shared/components/expense-chart/exp
 })
 export class DashboardComponent {
   financialService = inject(FinancialService);
+  confirmService = inject(ConfirmDialogService);
   Math = Math;
 
   isModalOpen = signal(false);
 
   deleteTransaction(id: string) {
-    if (confirm('Tem certeza que deseja excluir esta transação?')) {
-      this.financialService.removeTransaction(id);
-    }
+    this.confirmService.confirm({
+      title: 'Excluir Transação',
+      message: 'Tem certeza que deseja remover este item? O valor será descontado do saldo.',
+      confirmText: 'Sim, excluir',
+      onConfirm: () => {
+        this.financialService.removeTransaction(id);
+      },
+    });
   }
 }
