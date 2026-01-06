@@ -2,11 +2,12 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FinancialService } from '../../core/services/financial.service';
 import { TransactionModalComponent } from '../transactions/components/transaction-modal/transaction-modal.component';
+import { ExpenseChartComponent } from '../../shared/components/expense-chart/expense-chart';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, CurrencyPipe, DatePipe, TransactionModalComponent],
+  imports: [CommonModule, CurrencyPipe, DatePipe, TransactionModalComponent, ExpenseChartComponent],
   template: `
     <div class="space-y-6 relative">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -89,6 +90,10 @@ import { TransactionModalComponent } from '../transactions/components/transactio
             [class.bg-green-500]="!financialService.isOverLimit()"
             [class.bg-red-500]="financialService.isOverLimit()"
           ></div>
+        </div>
+
+        <div class="md:col-span-2">
+          <app-expense-chart />
         </div>
       </div>
 

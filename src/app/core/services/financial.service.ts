@@ -1,6 +1,6 @@
 import { Injectable, computed, signal, effect, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Transaction } from '../models/transaction.model';
+import { Goal, Transaction } from '../models/transaction.model';
 
 @Injectable({
   providedIn: 'root',
@@ -10,6 +10,7 @@ export class FinancialService {
 
   private transactions = signal<Transaction[]>([]);
   private monthlyLimitSignal = signal<number>(3000);
+  private goals = signal<Goal[]>([]);
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
@@ -19,6 +20,7 @@ export class FinancialService {
         const state = {
           transactions: this.transactions(),
           limit: this.monthlyLimitSignal(),
+          goals: this.goals(),
         };
         localStorage.setItem('finance-flow-data', JSON.stringify(state));
       });
@@ -37,6 +39,15 @@ export class FinancialService {
 
       this.transactions.set(transactionsWithDates);
       this.monthlyLimitSignal.set(parsed.limit || 3000);
+
+      if (parsed.goals) {
+        this.goals.set(
+          parsed.goals.map((g: any) => ({
+            ...g,
+            deadline: new Date(g.deadline),
+          }))
+        );
+      }
     } else {
       this.transactions.set([
         {
@@ -95,5 +106,24 @@ export class FinancialService {
   }
   getMonthlyLimit() {
     return this.monthlyLimitSignal.asReadonly();
+  }
+
+  getGoals() {
+    return this.goals.asReadonly();
+  }
+
+  addGoal(goal: Omit<Goal, 'id'>) {
+    const newGoal: Goal = { ...goal, id: crypto.randomUUID() };
+    this.goals.update((current) => [...current, newGoal]);
+  }
+
+  removeGoal(id: string) {
+    this.goals.update((current) => current.filter((g) => g.id !== id));
+  }
+
+  updateGoalAmount(id: string, newAmount: number) {
+    this.goals.update((current) =>
+      current.map((g) => (g.id === id ? { ...g, currentAmount: newAmount } : g))
+    );
   }
 }

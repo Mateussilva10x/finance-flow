@@ -16,6 +16,20 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/dashboard/dashboard').then((m) => m.DashboardComponent),
       },
+      {
+        path: 'transactions',
+        loadComponent: () =>
+          import('./features/transactions/transactions').then((m) => m.TransactionsComponent),
+      },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./features/settings/settings').then((m) => m.SettingsComponent),
+      },
+      {
+        path: 'goals',
+        loadComponent: () => import('./features/goals/goals').then((m) => m.GoalsComponent),
+      },
     ],
   },
   {
